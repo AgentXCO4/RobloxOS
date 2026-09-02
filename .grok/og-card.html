@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Roblox OS OG</title>
+<style>
+  @font-face {
+    font-family: "Archivo Black";
+    src: url("fonts/ArchivoBlack-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+  }
+  html, body {
+    margin: 0;
+    width: 1200px;
+    height: 630px;
+    overflow: hidden;
+    background: #0c0d10;
+    font-family: "Archivo Black", system-ui, sans-serif;
+  }
+  .stage {
+    position: relative;
+    width: 1200px;
+    height: 630px;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 42%, rgba(226, 35, 26, 0.22), transparent 62%),
+      radial-gradient(ellipse 90% 70% at 50% 110%, rgba(22, 23, 28, 1), transparent 55%),
+      linear-gradient(180deg, #12131a 0%, #0c0d10 55%, #08090c 100%);
+  }
+  .grid {
+    position: absolute;
+    inset: 80px -10% -20%;
+    background-image:
+      linear-gradient(rgba(200, 204, 212, 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200, 204, 212, 0.07) 1px, transparent 1px);
+    background-size: 56px 56px;
+    transform: perspective(700px) rotateX(62deg);
+    transform-origin: center top;
+    mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 70%, transparent);
+  }
+  .vignette {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at center, transparent 48%, rgba(8, 9, 12, 0.55) 100%);
+    pointer-events: none;
+    z-index: 40;
+  }
+  .scan {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.015) 0 1px,
+      transparent 1px 3px
+    );
+    z-index: 41;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  .win {
+    position: absolute;
+    background: rgba(22, 23, 28, 0.88);
+    border: 1px solid rgba(200, 204, 212, 0.16);
+    border-radius: 14px;
+    box-shadow:
+      0 18px 50px rgba(0,0,0,.45),
+      0 0 0 1px rgba(0,0,0,.4) inset,
+      0 0 40px rgba(226, 35, 26, 0.08);
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+  }
+  .tb {
+    height: 28px;
+    background: linear-gradient(180deg, #1d1e26, #16171c);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    border-bottom: 1px solid rgba(200,204,212,.08);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot.r { background: #E2231A; }
+  .dot.s { background: #c8ccd4; opacity: .45; }
+  .tb .label {
+    margin-left: 6px;
+    font-family: system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: #c8ccd4;
+    opacity: .7;
+  }
+  .body { padding: 12px; }
+  .win.explorer { width: 250px; height: 176px; left: 42px; top: 86px; transform: rotate(-7deg); }
+  .folders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .folder {
+    height: 54px;
+    border-radius: 8px;
+    background: #1c1d24;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .folder i {
+    width: 28px; height: 20px; border-radius: 3px 3px 4px 4px;
+    position: relative;
+  }
+  .folder i::before {
+    content: "";
+    position: absolute; left: 0; top: -5px;
+    width: 12px; height: 7px; border-radius: 2px 2px 0 0;
+    background: inherit; filter: brightness(1.15);
+  }
+  .folder b {
+    width: 22px; height: 4px; border-radius: 2px; background: #c8ccd4; opacity: .35;
+  }
+  .win.studio { width: 268px; height: 190px; right: 36px; top: 72px; transform: rotate(6deg); }
+  .viewport {
+    height: 118px;
+    border-radius: 8px;
+    background:
+      radial-gradient(circle at 50% 58%, rgba(226,35,26,.35), transparent 50%),
+      linear-gradient(160deg, #14151b, #0c0d10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .iso {
+    width: 72px;
+    height: 66px;
+    position: relative;
+  }
+  .iso .top, .iso .left, .iso .right {
+    position: absolute;
+    width: 42px;
+    height: 36px;
+  }
+  .iso .top {
+    background: #c8ccd4;
+    transform: translate(15px, 2px) rotate(-30deg) skewX(-30deg) scaleY(0.86);
+    border-radius: 4px;
+    opacity: .92;
+  }
+  .iso .left {
+    background: #E2231A;
+    transform: translate(1px, 20px) rotate(30deg) skewY(-30deg) scaleX(0.86);
+    border-radius: 4px;
+  }
+  .iso .right {
+    background: #9a1712;
+    transform: translate(30px, 20px) rotate(-30deg) skewY(30deg) scaleX(0.86);
+    border-radius: 4px;
+  }
+  .crew {
+    position: absolute;
+    bottom: 78px;
+    display: flex;
+    align-items: flex-end;
+    gap: 22px;
+    z-index: 8;
+    filter: drop-shadow(0 16px 18px rgba(0,0,0,.5));
+  }
+  .crew.left { left: 200px; }
+  .crew.right { right: 200px; }
+  .avatar { position: relative; }
+  .avatar .head {
+    width: 46px; height: 46px; border-radius: 8px;
+    background: linear-gradient(160deg, #ffe17a, #f0b429 70%);
+    margin: 0 auto;
+    box-shadow: inset -7px -8px 0 rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.15);
+    position: relative; z-index: 2;
+  }
+  .avatar .face { position: absolute; inset: 0; }
+  .avatar .eye {
+    position: absolute; top: 16px; width: 7px; height: 10px; background: #1a1208; border-radius: 2px;
+  }
+  .avatar .eye.l { left: 11px; }
+  .avatar .eye.r { right: 11px; }
+  .avatar .smile {
+    position: absolute; left: 16px; right: 16px; bottom: 10px; height: 7px;
+    border: 2px solid #1a1208; border-top: 0; border-radius: 0 0 8px 8px;
+  }
+  .avatar .torso {
+    width: 42px; height: 44px; margin: 3px auto 0; border-radius: 6px;
+    box-shadow: inset -8px -10px 0 rgba(0,0,0,.16);
+    position: relative; z-index: 1;
+  }
+  .avatar .arm {
+    position: absolute; top: 51px; width: 14px; height: 40px; border-radius: 5px;
+    background: linear-gradient(160deg, #ffe17a, #e0a61f);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.12);
+  }
+  .avatar .arm.l { left: -6px; transform: rotate(8deg); }
+  .avatar .arm.r { right: -6px; transform: rotate(-8deg); }
+  .avatar .leg {
+    position: absolute; top: 96px; width: 16px; height: 36px; border-radius: 5px;
+    background: #3d4250;
+    box-shadow: inset -3px -4px 0 rgba(0,0,0,.2);
+  }
+  .avatar .leg.l { left: 10px; }
+  .avatar .leg.r { right: 10px; }
+  .avatar.red .torso { background: linear-gradient(160deg, #ff4a42, #E2231A); }
+  .avatar.blue .torso { background: linear-gradient(160deg, #5aa4ff, #2b6fe0); }
+  .avatar.green .torso { background: linear-gradient(160deg, #5ee09a, #1fa862); }
+  .avatar.purple .torso { background: linear-gradient(160deg, #c084fc, #7c3aed); }
+  .avatar.sm { transform: scale(.82); }
+  .lockup {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    transform: translateY(-36px);
+  }
+  .gem {
+    width: 38px; height: 38px;
+    background: linear-gradient(145deg, #ff4e44, #E2231A 55%, #b11610);
+    border-radius: 9px;
+    transform: rotate(-18deg);
+    box-shadow:
+      0 0 28px rgba(226, 35, 26, .85),
+      inset 0 0 0 7px #16171c,
+      inset 0 0 0 9px #c8ccd4;
+    margin-bottom: 18px;
+  }
+  .word {
+    font-family: "Archivo Black", sans-serif;
+    font-size: 112px;
+    line-height: 0.86;
+    letter-spacing: 0.06em;
+    color: #f2f3f5;
+    text-shadow:
+      0 0 22px rgba(226, 35, 26, 0.35),
+      0 3px 0 #8d8f96,
+      0 10px 28px rgba(0,0,0,.6);
+    margin: 0;
+  }
+  .word.os {
+    font-size: 92px;
+    letter-spacing: 0.28em;
+    color: #E2231A;
+    text-indent: 0.14em;
+    text-shadow:
+      0 0 30px rgba(226, 35, 26, 0.7),
+      0 3px 0 #7a120e,
+      0 10px 28px rgba(0,0,0,.55);
+    margin-top: 6px;
+  }
+  .taskbar {
+    position: absolute;
+    left: 18px; right: 18px; bottom: 16px;
+    height: 48px;
+    background: rgba(22, 23, 28, 0.92);
+    border: 1px solid rgba(200, 204, 212, 0.12);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+    z-index: 30;
+    box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    backdrop-filter: blur(10px);
+  }
+  .start {
+    width: 32px; height: 32px;
+    background: linear-gradient(145deg, #ff4e44, #E2231A);
+    border-radius: 8px;
+    transform: rotate(-18deg);
+    box-shadow: 0 0 14px rgba(226,35,26,.55);
+    flex: none;
+  }
+  .pill {
+    height: 28px; border-radius: 8px;
+    background: #1c1d24;
+    border: 1px solid rgba(200,204,212,.08);
+  }
+  .clock {
+    margin-left: auto;
+    font-family: system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #c8ccd4;
+    letter-spacing: .04em;
+    padding-right: 8px;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="grid"></div>
+
+    <div class="win explorer">
+      <div class="tb">
+        <span class="dot r"></span><span class="dot s"></span><span class="dot s"></span>
+        <span class="label">Places</span>
+      </div>
+      <div class="body">
+        <div class="folders">
+          <div class="folder"><i style="background:#E2231A"></i><b></b></div>
+          <div class="folder"><i style="background:#5aa4ff"></i><b></b></div>
+          <div class="folder"><i style="background:#5ee09a"></i><b></b></div>
+          <div class="folder"><i style="background:#f0b429"></i><b></b></div>
+          <div class="folder"><i style="background:#c084fc"></i><b></b></div>
+          <div class="folder"><i style="background:#c8ccd4"></i><b></b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="win studio">
+      <div class="tb">
+        <span class="dot r"></span><span class="dot s"></span><span class="dot s"></span>
+        <span class="label">Studio</span>
+      </div>
+      <div class="body" style="padding:10px">
+        <div class="viewport">
+          <div class="iso"><div class="top"></div><div class="left"></div><div class="right"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="crew left">
+      <div class="avatar blue sm">
+        <div class="head"><div class="face"><span class="eye l"></span><span class="eye r"></span><span class="smile"></span></div></div>
+        <div class="arm l"></div><div class="arm r"></div>
+        <div class="torso"></div>
+        <div class="leg l"></div><div class="leg r"></div>
+      </div>
+      <div class="avatar green">
+        <div class="head"><div class="face"><span class="eye l"></span><span class="eye r"></span><span class="smile"></span></div></div>
+        <div class="arm l"></div><div class="arm r"></div>
+        <div class="torso"></div>
+        <div class="leg l"></div><div class="leg r"></div>
+      </div>
+    </div>
+    <div class="crew right">
+      <div class="avatar red">
+        <div class="head"><div class="face"><span class="eye l"></span><span class="eye r"></span><span class="smile"></span></div></div>
+        <div class="arm l"></div><div class="arm r"></div>
+        <div class="torso"></div>
+        <div class="leg l"></div><div class="leg r"></div>
+      </div>
+      <div class="avatar purple sm">
+        <div class="head"><div class="face"><span class="eye l"></span><span class="eye r"></span><span class="smile"></span></div></div>
+        <div class="arm l"></div><div class="arm r"></div>
+        <div class="torso"></div>
+        <div class="leg l"></div><div class="leg r"></div>
+      </div>
+    </div>
+
+    <div class="lockup">
+      <div class="gem"></div>
+      <p class="word">ROBLOX</p>
+      <p class="word os">OS</p>
+    </div>
+
+    <div class="taskbar">
+      <div class="start"></div>
+      <div class="pill" style="width:92px"></div>
+      <div class="pill" style="width:72px"></div>
+      <div class="pill" style="width:58px"></div>
+      <div class="clock">12:00</div>
+    </div>
+
+    <div class="vignette"></div>
+    <div class="scan"></div>
+  </div>
+</body>
+</html>
